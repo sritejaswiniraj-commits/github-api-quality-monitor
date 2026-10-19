@@ -1,5 +1,7 @@
-
+import json
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 
 import requests
 
@@ -71,7 +73,9 @@ def check_github_api():
         result["has_required_fields"] = validate_response_schema(data)
 
         if not result["has_required_fields"]:
-            result["error"] = "Response JSON did not match the expected schema"
+            result["error"] = (
+                "Response JSON did not match the expected schema"
+            )
             return result
 
         result["success"] = True
@@ -85,8 +89,25 @@ def check_github_api():
         return result
 
 
+def save_result(result):
+    """Append one timestamped monitoring result to the history file."""
+    history_file = Path("results/history.jsonl")
+    history_file.parent.mkdir(parents=True, exist_ok=True)
+
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        **result,
+    }
+
+    with history_file.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(record) + "\n")
+
+
 if __name__ == "__main__":
     result = check_github_api()
+    save_result(result)
 
     for key, value in result.items():
         print(f"{key}: {value}")
+
+    print("result_saved_to: results/history.jsonl")
