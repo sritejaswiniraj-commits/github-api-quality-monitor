@@ -7,6 +7,7 @@ import requests
 
 API_URL = "https://api.github.com/repos/octocat/Hello-World"
 TIMEOUT_SECONDS = 10
+MAX_RESPONSE_TIME_MS = 500
 
 
 def validate_response_schema(data):
@@ -42,6 +43,8 @@ def check_github_api():
         "status_code": None,
         "response_time_ms": None,
         "success": False,
+        "performance_passed": None,
+        "performance_message": None,
         "rate_limit_remaining": None,
         "has_required_fields": False,
         "error": None,
@@ -79,6 +82,19 @@ def check_github_api():
             return result
 
         result["success"] = True
+
+        response_time = result["response_time_ms"]
+
+        result["performance_passed"] = (
+        response_time <= MAX_RESPONSE_TIME_MS
+        )
+        if result["performance_passed"]:
+            result["performance_message"] = "Response time is within the limit"
+        else:
+            result["performance_message"] = (
+                f"Response time exceeded the {MAX_RESPONSE_TIME_MS} ms limit"
+           )
+
         return result
 
     except requests.RequestException as exc:

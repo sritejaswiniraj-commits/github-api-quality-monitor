@@ -118,3 +118,26 @@ def test_invalid_owner_structure_is_detected(mock_get):
 
     assert result["success"] is False
     assert result["has_required_fields"] is False
+
+
+def test_fast_response_passes_performance_threshold():
+    mock_response = make_response()
+    with patch("monitor.requests.get", return_value=mock_response):
+        with patch("monitor.time.perf_counter", side_effect=[0, 0.3]):
+            result = check_github_api()
+
+    assert result["success"] is True
+    assert result["performance_passed"] is True
+    assert result["performance_message"] == "Response time is within the limit"
+
+
+def test_slow_response_fails_performance_threshold():
+    mock_response = make_response()
+    with patch("monitor.requests.get", return_value=mock_response):
+        with patch("monitor.time.perf_counter", side_effect=[0, 0.7]):
+            result = check_github_api()
+
+    assert result["success"] is True
+    assert result["performance_passed"] is False
+    assert "exceeded" in result["performance_message"]
+

@@ -15,6 +15,9 @@ The project demonstrates API testing, automated test design, error handling, tes
 - **Historical analysis:** Reports total checks, successful and failed checks, success rate, and response-time statistics.
 - **Automated testing:** Uses pytest and mocked API responses to test different scenarios.
 - **Continuous integration:** Runs automated tests through GitHub Actions.
+- **Performance thresholds:** Flags successful API responses that exceed a configurable response-time limit (currently 500 ms).
+- **Separate performance status:** Distinguishes API availability and schema validation from response-time performance.
+- **Performance testing:** Includes automated tests for responses below and above the configured threshold.
 
 ## Technology Stack
 
