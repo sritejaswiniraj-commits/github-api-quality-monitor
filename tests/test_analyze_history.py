@@ -127,3 +127,69 @@ def test_legacy_records_without_performance_fields(tmp_path, capsys):
     assert "Successful checks: 1" in output
     assert "Failed checks: 1" in output
     assert "Performance data unavailable" in output
+
+
+def test_success_rate_trend_improving():
+    earlier = [
+        {"success": True},
+        {"success": False},
+    ]
+    later = [
+        {"success": True},
+        {"success": True},
+    ]
+
+    earlier_rate = analyze_history.calculate_success_rate(earlier)
+    later_rate = analyze_history.calculate_success_rate(later)
+
+    assert earlier_rate == 50.0
+    assert later_rate == 100.0
+    assert (
+        analyze_history.describe_trend(earlier_rate, later_rate)
+        == "improving"
+    )
+
+
+def test_response_time_trend_improving():
+    earlier_average = 400.0
+    later_average = 300.0
+
+    assert (
+        analyze_history.describe_trend(
+            earlier_average,
+            later_average,
+            higher_is_better=False,
+        )
+        == "improving"
+    )
+
+
+def test_response_time_trend_worsening():
+    earlier_average = 300.0
+    later_average = 400.0
+
+    assert (
+        analyze_history.describe_trend(
+            earlier_average,
+            later_average,
+            higher_is_better=False,
+        )
+        == "worsening"
+    )
+
+
+def test_invalid_response_time_is_ignored():
+    assert analyze_history.valid_response_time(
+        {"response_time_ms": "slow"}
+    ) is None
+
+    assert analyze_history.valid_response_time(
+        {"response_time_ms": True}
+    ) is None
+
+
+def test_trend_report_handles_insufficient_history(capsys):
+    analyze_history.report_trends([{"success": True}])
+
+    output = capsys.readouterr().out
+    assert "Not enough history" in output
