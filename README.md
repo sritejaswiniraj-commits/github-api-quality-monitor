@@ -1,28 +1,31 @@
 # GitHub API Quality Monitor
 
-A Python-based API monitoring project that checks the availability, response time, response structure, and rate-limit information of a public GitHub REST API endpoint.
+[![Tests](https://github.com/sritejaswiniraj-commits/github-api-quality-monitor/actions/workflows/tests.yml/badge.svg)](https://github.com/sritejaswiniraj-commits/github-api-quality-monitor/actions)
 
-The project demonstrates API testing, automated test design, error handling, test reporting, and continuous integration using GitHub Actions.
+A Python-based API monitoring and quality analysis project that evaluates the availability, response time, response structure, and rate-limit information of the GitHub REST API.
+
+The project combines API monitoring, automated testing, performance checks, historical trend analysis, visual reporting, and continuous integration using GitHub Actions.
 
 ## Features
 
-- **API availability monitoring:** Checks the HTTP status code.
-- **Response-time measurement:** Records how long the API request takes.
-- **Schema validation:** Verifies that required JSON fields exist and have the expected types.
-- **Rate-limit tracking:** Captures the remaining GitHub API request allowance.
-- **Error handling:** Handles HTTP errors, invalid JSON, request failures, and unexpected response structures.
-- **Historical logging:** Stores timestamped monitoring results in JSON Lines format.
-- **Historical analysis:** Reports total checks, successful and failed checks, success rate, and response-time statistics.
-- **Automated testing:** Uses pytest and mocked API responses to test different scenarios.
-- **Continuous integration:** Runs automated tests through GitHub Actions.
-- **Performance thresholds:** Flags successful API responses that exceed a configurable response-time limit (currently 500 ms).
-- **Separate performance status:** Distinguishes API availability and schema validation from response-time performance.
-- **Performance testing:** Includes automated tests for responses below and above the configured threshold.
+- **API availability monitoring:** Checks HTTP responses and identifies unsuccessful requests.
+- **Response-time measurement:** Records API request duration in milliseconds.
+- **Response validation:** Verifies required JSON fields and expected data types.
+- **Rate-limit tracking:** Records the remaining GitHub API request allowance.
+- **Error handling:** Handles HTTP errors, invalid JSON, timeouts, request failures, and unexpected response structures.
+- **Historical logging:** Stores timestamped monitoring results in JSON Lines (`JSONL`) format.
+- **Historical analysis:** Calculates success rates, failed checks, and response-time statistics.
+- **Trend analysis:** Compares earlier and later portions of the monitoring history to identify changes in reliability and response times.
+- **Performance monitoring:** Evaluates response times against a 500 ms threshold and tracks performance pass rates separately from API availability.
+- **Visual reporting:** Generates PNG charts for response times, API check results, and performance threshold results.
+- **Automated testing:** Uses pytest and mocked HTTP responses to validate monitoring and reporting behavior.
+- **Continuous integration:** Runs the automated test suite through GitHub Actions.
 
 ## Technology Stack
 
 - Python 3.12
 - Requests
+- Matplotlib
 - pytest
 - GitHub REST API
 - GitHub Actions
@@ -37,34 +40,41 @@ github-api-quality-monitor/
 │       └── tests.yml
 ├── results/
 │   └── history.jsonl
+├── reports/
+│   ├── response_times.png
+│   ├── api_success_failures.png
+│   └── performance_pass_rate.png
 ├── tests/
-│   └── test_monitor.py
-├── analyze_history.py
+│   ├── test_monitor.py
+│   ├── test_analyze_history.py
+│   └── test_generate_reports.py
 ├── monitor.py
+├── analyze_history.py
+├── generate_reports.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
 
-The `results/history.jsonl` file is generated locally when the monitor runs. It may not exist in a fresh checkout until the first monitoring run.
+The `results/history.jsonl` file stores monitoring results and may not exist in a fresh checkout until the monitor has been run. The report generator uses the saved history to create charts in the `reports/` directory.
 
 ## Setup
 
-Clone the repository:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/sritejaswiniraj-commits/github-api-quality-monitor.git
 cd github-api-quality-monitor
 ```
 
-Create and activate a virtual environment:
+### 2. Create and activate a virtual environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install dependencies:
+### 3. Install dependencies
 
 ```bash
 python -m pip install -r requirements.txt
@@ -72,56 +82,99 @@ python -m pip install -r requirements.txt
 
 ## Usage
 
-Run an API check and save the result to the history file:
+### Run an API check
 
 ```bash
 python monitor.py
 ```
 
-Analyze the recorded monitoring history:
+This checks the configured GitHub API endpoint and records the result in the history file.
+
+### Analyze historical results
 
 ```bash
 python analyze_history.py
 ```
 
-Run the automated test suite:
+The analysis reports successful and failed checks, success rate, response-time statistics, performance pass rate, and available trend comparisons.
+
+### Generate visual reports
+
+```bash
+python generate_reports.py
+```
+
+The generated charts are saved in the `reports/` directory.
+
+## Visual Reports
+
+### 1. API Response Times
+
+Plots recorded response times and displays the 500 ms performance threshold.
+
+![API Response Times](reports/response_times.png)
+
+### 2. API Check Results
+
+Compares successful and failed API checks.
+
+![API Check Results](reports/api_success_failures.png)
+
+### 3. Performance Threshold Results
+
+Shows performance checks that passed or failed. Only records containing valid performance results are included.
+
+![Performance Threshold Results](reports/performance_pass_rate.png)
+
+## Automated Testing
+
+Run the full test suite with:
 
 ```bash
 python -m pytest -v
 ```
 
-## Automated Testing
+The tests cover:
 
-The test suite covers:
+- Successful API responses and HTTP errors
+- Missing required fields and invalid response structures
+- Invalid JSON and request timeouts
+- Response-time performance thresholds
+- Historical success-rate and response-time calculations
+- Performance pass-rate calculations
+- Backward compatibility with older history records
+- Trend calculations and insufficient historical data
+- Chart generation, missing history, and malformed JSON records
 
-- Successful API responses
-- Unexpected HTTP status codes
-- Missing required fields
-- Invalid JSON responses
-- Request timeouts
-- Incorrect field types
-- Invalid owner structures
+The monitoring tests use mocked HTTP responses to exercise different scenarios without requiring a live API response for every test.
 
-The tests use mocked HTTP responses to exercise different scenarios without depending on a live API response for every test.
-
-**Latest local test result:** 7 tests passed.
+**Latest verified local result:** 25 tests passed.
 
 ## Continuous Integration
 
-GitHub Actions automatically runs the pytest suite when code is pushed or a pull request is opened. The workflow can also be triggered manually.
+GitHub Actions runs the pytest suite when code is pushed or a pull request is opened.
 
-## Learning Outcomes
+[View GitHub Actions workflow runs](https://github.com/sritejaswiniraj-commits/github-api-quality-monitor/actions)
 
-This project demonstrates practical skills in API testing, Python automation, response validation, exception handling, test isolation, JSON-based reporting, and CI/CD fundamentals.
+## Current Limitations
 
-## Future Improvements
+- Trend analysis compares earlier and later portions of the available history; it is not a forecast.
+- Trend results can be unreliable when only a small number of monitoring records are available.
+- Performance trends require sufficient records with performance results.
+- The current charts are static PNG files generated from saved history rather than live dashboards.
+- Historical results depend on the monitoring records available in the history file.
 
-- Configurable API endpoints
-- Response-time thresholds and performance alerts
-- Historical trend visualization
-- Scheduled monitoring
+## Potential Future Improvements
+
+- Configurable API endpoints and performance thresholds
+- Scheduled monitoring and notifications
+- More advanced historical trend analysis
+- Interactive dashboards
 - Exportable monitoring reports
+- Additional API endpoints and configurable validation rules
 
 ## Author
 
-Tejaswini Raj
+**Tejaswini Raj Sri Raja**
+
+[GitHub Repository](https://github.com/sritejaswiniraj-commits/github-api-quality-monitor)
