@@ -127,3 +127,6 @@ if __name__ == "__main__":
         print(f"{key}: {value}")
 
     print("result_saved_to: results/history.jsonl")
+
+    if not result["success"] or result["performance_passed"] is False:
+        raise SystemExit(1)
