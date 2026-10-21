@@ -81,3 +81,49 @@ def test_report_without_response_times(tmp_path, capsys):
     output = capsys.readouterr().out
     assert "Total checks: 1" in output
     assert "No response-time data available" in output
+
+
+def test_report_calculates_performance_pass_rate(tmp_path, capsys):
+    history_file = tmp_path / "history.jsonl"
+    records = [
+        {"success": True, "response_time_ms": 100, "performance_passed": True},
+        {"success": True, "response_time_ms": 600, "performance_passed": False},
+        {"success": False, "response_time_ms": 300, "performance_passed": True},
+        {"success": True, "response_time_ms": 200, "performance_passed": True},
+    ]
+
+    history_file.write_text(
+        "\n".join(json.dumps(record) for record in records),
+        encoding="utf-8",
+    )
+
+    with patch.object(analyze_history, "HISTORY_FILE", history_file):
+        analyze_history.analyze_history()
+
+    output = capsys.readouterr().out
+    assert "Performance checks: 4" in output
+    assert "Performance passes: 3" in output
+    assert "Performance failures: 1" in output
+    assert "Performance pass rate: 75.00%" in output
+
+
+def test_legacy_records_without_performance_fields(tmp_path, capsys):
+    history_file = tmp_path / "history.jsonl"
+    records = [
+        {"success": True, "response_time_ms": 150},
+        {"success": False, "response_time_ms": 250},
+    ]
+
+    history_file.write_text(
+        "\n".join(json.dumps(record) for record in records),
+        encoding="utf-8",
+    )
+
+    with patch.object(analyze_history, "HISTORY_FILE", history_file):
+        analyze_history.analyze_history()
+
+    output = capsys.readouterr().out
+    assert "Total checks: 2" in output
+    assert "Successful checks: 1" in output
+    assert "Failed checks: 1" in output
+    assert "Performance data unavailable" in output
