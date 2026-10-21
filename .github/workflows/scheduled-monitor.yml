@@ -6,6 +6,10 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   monitor:
     runs-on: ubuntu-latest
@@ -24,14 +28,50 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+
+      - name: Restore previous monitoring history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results
+
+          RUN_IDS=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/scheduled-monitor.yml/runs?branch=main&status=success&per_page=20" \
+            --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID}) | .id")
+
+          while IFS= read -r RUN_ID; do
+            [ -z "$RUN_ID" ] && continue
+
+            echo "Checking history artifact in run $RUN_ID"
+
+            if gh run download "$RUN_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name api-monitor-history \
+              --dir results; then
+              if [ -f results/history.jsonl ]; then
+                echo "Previous monitoring history restored."
+                exit 0
+              fi
+            fi
+          done <<< "$RUN_IDS"
+
+          echo "No previous history artifact found; starting fresh."
+
+
       - name: Run API monitor
+        id: monitor
+        continue-on-error: true
         run: python monitor.py
 
-      - name: Upload monitoring history
+      - name: Upload cumulative monitoring history
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-monitor-history
           path: results/history.jsonl
           if-no-files-found: warn
+          retention-days: 90
 
+      - name: Fail workflow if monitoring failed
+        if: steps.monitor.outcome == 'failure'
+        run: exit 1
