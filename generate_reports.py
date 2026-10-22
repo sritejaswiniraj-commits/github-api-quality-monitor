@@ -74,17 +74,39 @@ def generate_reports(history_file=None, output_dir=None):
     if timed_records:
         run_numbers, response_times = zip(*timed_records)
 
-        fig, ax = plt.subplots(figsize=(9, 5))
-        ax.plot(run_numbers, response_times, marker="o", label="Response time")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(
+            run_numbers,
+            response_times,
+            marker="o",
+            linewidth=2,
+            markersize=6,
+            label="Response time",
+        )
         ax.axhline(
             PERFORMANCE_THRESHOLD_MS,
             linestyle="--",
-            label=f"Threshold ({PERFORMANCE_THRESHOLD_MS} ms)",
+            linewidth=1.5,
+            label=f"Performance threshold ({PERFORMANCE_THRESHOLD_MS} ms)",
         )
-        ax.set_title("API Response Times")
-        ax.set_xlabel("Monitoring record")
+
+        # Highlight measurements that exceed the threshold.
+        for run_number, response_time in timed_records:
+            if response_time > PERFORMANCE_THRESHOLD_MS:
+                ax.annotate(
+                    f"{response_time:g} ms",
+                    (run_number, response_time),
+                    xytext=(0, 8),
+                    textcoords="offset points",
+                    ha="center",
+                    fontsize=8,
+                )
+
+        ax.set_title("API Response Time by Monitoring Run")
+        ax.set_xlabel("Monitoring run")
         ax.set_ylabel("Response time (ms)")
-        ax.grid(True, alpha=0.3)
+        ax.set_xticks(run_numbers)
+        ax.grid(axis="y", alpha=0.3)
         ax.legend()
         fig.tight_layout()
 
@@ -95,21 +117,40 @@ def generate_reports(history_file=None, output_dir=None):
     else:
         print("No valid response-time data; response-time chart skipped.")
 
+
+
     # Chart 2: successful versus failed API checks.
     successful = sum(record.get("success") is True for record in records)
     failed = len(records) - successful
+    total_checks = len(records)
+    success_rate = (successful / total_checks) * 100 if total_checks else 0
 
-    fig, ax = plt.subplots(figsize=(7, 5))
-    ax.bar(["Successful", "Failed"], [successful, failed])
-    ax.set_title("API Check Results")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(["Successful", "Failed"], [successful, failed])
+
+    ax.set_title(f"API Check Results — {success_rate:.1f}% Success Rate")
     ax.set_ylabel("Number of checks")
     ax.grid(axis="y", alpha=0.3)
+
+    for bar, count in zip(bars, [successful, failed]):
+        ax.annotate(
+            str(count),
+            (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            xytext=(0, 4),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+        )
+
+    ax.set_ylim(0, max(successful, failed, 1) * 1.15)
     fig.tight_layout()
 
     path = output_dir / "api_success_failures.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)
     generated_files.append(path)
+
+
 
     # Chart 3: performance results only for records with a boolean value.
     performance_results = [
@@ -121,12 +162,27 @@ def generate_reports(history_file=None, output_dir=None):
     if performance_results:
         passes = sum(performance_results)
         failures = len(performance_results) - passes
+        total_performance_checks = len(performance_results)
+        pass_rate = (passes / total_performance_checks) * 100
 
-        fig, ax = plt.subplots(figsize=(7, 5))
-        ax.bar(["Passed", "Failed"], [passes, failures])
-        ax.set_title("Performance Threshold Results")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        bars = ax.bar(["Passed", "Failed"], [passes, failures])
+
+        ax.set_title(f"Performance Threshold Results — {pass_rate:.1f}% Pass Rate")
         ax.set_ylabel("Number of checks")
         ax.grid(axis="y", alpha=0.3)
+
+        for bar, count in zip(bars, [passes, failures]):
+            ax.annotate(
+                str(count),
+                (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+                xytext=(0, 4),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+            )
+
+        ax.set_ylim(0, max(passes, failures, 1) * 1.15)
         fig.tight_layout()
 
         path = output_dir / "performance_pass_rate.png"
@@ -135,6 +191,7 @@ def generate_reports(history_file=None, output_dir=None):
         generated_files.append(path)
     else:
         print("No performance data; performance chart skipped.")
+
 
     print(f"Generated {len(generated_files)} chart(s):")
     for path in generated_files:

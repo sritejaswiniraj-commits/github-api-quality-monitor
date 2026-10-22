@@ -110,19 +110,19 @@ The generated charts are saved in the `reports/` directory.
 
 ### 1. API Response Times
 
-Plots recorded response times and displays the 500 ms performance threshold.
+Displays response times by monitoring run, shows the 500 ms performance threshold, and annotates measurements that exceed the threshold.
 
 ![API Response Times](reports/response_times.png)
 
 ### 2. API Check Results
 
-Compares successful and failed API checks.
+Compares successful and failed API checks, displays the count for each category, and includes the overall API success rate.
 
 ![API Check Results](reports/api_success_failures.png)
 
 ### 3. Performance Threshold Results
 
-Shows performance checks that passed or failed. Only records containing valid performance results are included.
+Compares passed and failed performance checks, displays the count for each category, and includes the overall performance pass rate. Only records containing valid Boolean performance results are included.
 
 ![Performance Threshold Results](reports/performance_pass_rate.png)
 
@@ -148,7 +148,7 @@ The tests cover:
 
 The monitoring tests use mocked HTTP responses to exercise different scenarios without requiring a live API response for every test.
 
-**Latest verified local result:** 25 tests passed.
+**Latest verified local result:** 37 tests passed.
 
 ## Continuous Integration
 
@@ -167,7 +167,7 @@ GitHub Actions runs the pytest suite when code is pushed or a pull request is op
 ## Potential Future Improvements
 
 - Configurable API endpoints and performance thresholds
-- Scheduled monitoring and notifications
+- Custom failure notifications
 - More advanced historical trend analysis
 - Interactive dashboards
 - Exportable monitoring reports
