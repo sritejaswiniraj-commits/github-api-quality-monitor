@@ -141,3 +141,57 @@ def test_slow_response_fails_performance_threshold():
     assert result["performance_passed"] is False
     assert "exceeded" in result["performance_message"]
 
+
+@patch("monitor.requests.get")
+def test_missing_rate_limit_header_does_not_fail_valid_response(mock_get):
+    mock_get.return_value = make_response(headers={})
+
+    result = check_github_api()
+
+    assert result["success"] is True
+    assert result["rate_limit_remaining"] is None
+
+
+@patch("monitor.requests.get")
+def test_connection_error_is_recorded(mock_get):
+    mock_get.side_effect = requests.ConnectionError("Connection failed")
+
+    result = check_github_api()
+
+    assert result["success"] is False
+    assert result["status_code"] is None
+    assert "Connection failed" in result["error"]
+
+
+def test_response_at_exact_threshold_passes():
+    mock_response = make_response()
+
+    with patch("monitor.requests.get", return_value=mock_response):
+        with patch("monitor.time.perf_counter", side_effect=[0, 0.5]):
+            result = check_github_api()
+
+    assert result["response_time_ms"] == 500.0
+    assert result["performance_passed"] is True
+
+
+@patch("monitor.requests.get")
+def test_non_dictionary_json_is_rejected(mock_get):
+    mock_get.return_value = make_response(data=["not", "an", "object"])
+
+    result = check_github_api()
+
+    assert result["success"] is False
+    assert result["has_required_fields"] is False
+    assert result["error"] == (
+        "Response JSON did not match the expected schema"
+    )
+
+
+def test_schema_rejects_invalid_top_level_types():
+    from monitor import validate_response_schema
+
+    assert validate_response_schema(None) is False
+    assert validate_response_schema([]) is False
+    assert validate_response_schema("not an object") is False
+    assert validate_response_schema(123) is False
+

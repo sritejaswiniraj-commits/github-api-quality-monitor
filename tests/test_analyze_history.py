@@ -193,3 +193,76 @@ def test_trend_report_handles_insufficient_history(capsys):
 
     output = capsys.readouterr().out
     assert "Not enough history" in output
+
+
+def test_non_dictionary_json_records_are_ignored(tmp_path, capsys):
+    history_file = tmp_path / "history.jsonl"
+    history_file.write_text(
+        '[1, 2, 3]\n'
+        '"not a dictionary"\n'
+        '{"success": true, "response_time_ms": 100}\n',
+        encoding="utf-8",
+    )
+
+    analyze_history.analyze_history(history_file)
+
+    output = capsys.readouterr().out
+    assert "Total checks: 1" in output
+    assert "Successful checks: 1" in output
+
+
+def test_missing_success_field_counts_as_failure(tmp_path, capsys):
+    history_file = tmp_path / "history.jsonl"
+    history_file.write_text(
+        '{"response_time_ms": 100}\n'
+        '{"success": true, "response_time_ms": 200}\n',
+        encoding="utf-8",
+    )
+
+    analyze_history.analyze_history(history_file)
+
+    output = capsys.readouterr().out
+    assert "Total checks: 2" in output
+    assert "Successful checks: 1" in output
+    assert "Failed checks: 1" in output
+    assert "Success rate: 50.00%" in output
+
+
+def test_invalid_response_time_values_are_ignored(tmp_path, capsys):
+    history_file = tmp_path / "history.jsonl"
+    history_file.write_text(
+        '{"success": true, "response_time_ms": 100}\n'
+        '{"success": true, "response_time_ms": "slow"}\n'
+        '{"success": true, "response_time_ms": true}\n'
+        '{"success": true, "response_time_ms": null}\n',
+        encoding="utf-8",
+    )
+
+    analyze_history.analyze_history(history_file)
+
+    output = capsys.readouterr().out
+    assert "Total checks: 4" in output
+    assert "Average response time: 100.00 ms" in output
+    assert "Fastest response time: 100.00 ms" in output
+    assert "Slowest response time: 100.00 ms" in output
+
+
+def test_mixed_valid_invalid_and_blank_lines(tmp_path, capsys):
+    history_file = tmp_path / "history.jsonl"
+    history_file.write_text(
+        '{"success": true, "response_time_ms": 100}\n'
+        '\n'
+        '{invalid json}\n'
+        '[1, 2, 3]\n'
+        '{"success": false, "response_time_ms": 300}\n',
+        encoding="utf-8",
+    )
+
+    analyze_history.analyze_history(history_file)
+
+    output = capsys.readouterr().out
+    assert "Skipping invalid JSON on line 3" in output
+    assert "Total checks: 2" in output
+    assert "Successful checks: 1" in output
+    assert "Failed checks: 1" in output
+    assert "Average response time: 200.00 ms" in output
