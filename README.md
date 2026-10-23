@@ -20,6 +20,7 @@ The project combines API monitoring, automated testing, performance checks, hist
 - **Visual reporting:** Generates PNG charts for response times, API check results, and performance threshold results.
 - **Automated testing:** Uses pytest and mocked HTTP responses to validate monitoring and reporting behavior.
 - **Continuous integration:** Runs the automated test suite through GitHub Actions.
+- **Interactive dashboard:** Uses Streamlit and Plotly to display monitoring KPIs, filter historical results by date and record count, and explore response-time and performance charts.
 
 ## Technology Stack
 
@@ -30,14 +31,18 @@ The project combines API monitoring, automated testing, performance checks, hist
 - GitHub REST API
 - GitHub Actions
 - JSON / JSONL
+- Streamlit
+- Plotly
 
 ## Project Structure
 
 ```text
+```text
 github-api-quality-monitor/
 ├── .github/
 │   └── workflows/
-│       └── tests.yml
+│       ├── tests.yml
+│       └── scheduled-monitor.yml
 ├── results/
 │   └── history.jsonl
 ├── reports/
@@ -47,13 +52,17 @@ github-api-quality-monitor/
 ├── tests/
 │   ├── test_monitor.py
 │   ├── test_analyze_history.py
-│   └── test_generate_reports.py
+│   ├── test_generate_reports.py
+│   └── test_dashboard_utils.py
+├── app.py
+├── dashboard_utils.py
 ├── monitor.py
 ├── analyze_history.py
 ├── generate_reports.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
+```
 ```
 
 The `results/history.jsonl` file stores monitoring results and may not exist in a fresh checkout until the monitor has been run. The report generator uses the saved history to create charts in the `reports/` directory.
@@ -81,6 +90,12 @@ python -m pip install -r requirements.txt
 ```
 
 ## Usage
+
+### Launch the interactive dashboard
+
+```bash
+python -m streamlit run app.py
+
 
 ### Run an API check
 
@@ -148,7 +163,7 @@ The tests cover:
 
 The monitoring tests use mocked HTTP responses to exercise different scenarios without requiring a live API response for every test.
 
-**Latest verified local result:** 37 tests passed.
+**Latest verified local result:** 44 tests passed.
 
 ## Continuous Integration
 
@@ -163,13 +178,13 @@ GitHub Actions runs the pytest suite when code is pushed or a pull request is op
 - Performance trends require sufficient records with performance results.
 - The current charts are static PNG files generated from saved history rather than live dashboards.
 - Historical results depend on the monitoring records available in the history file.
+- The interactive dashboard currently runs locally; public deployment has not yet been configured.
 
 ## Potential Future Improvements
 
 - Configurable API endpoints and performance thresholds
 - Custom failure notifications
 - More advanced historical trend analysis
-- Interactive dashboards
 - Exportable monitoring reports
 - Additional API endpoints and configurable validation rules
 
