@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub API Quality Monitor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--fg:#e6edf3;--muted:#8b949e;
+  --accent:#58a6ff;--good:#3fb950;--warn:#d29922;--bad:#f85149}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:28px 20px;max-width:1040px;margin:0 auto}
+h1{font-size:28px;margin:0;letter-spacing:-.01em}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;
+  font-weight:700;margin-left:10px;vertical-align:middle;
+  background:#3fb95022;color:#3fb950;border:1px solid #3fb95055}
+.sub{color:var(--muted);font-size:14px;margin:6px 0 26px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:26px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.kpi .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-size:30px;font-weight:700;margin-top:8px;line-height:1}
+.kpi .f{color:var(--muted);font-size:12px;margin-top:8px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.card h2{font-size:15px;margin:0 0 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left}
+th{color:var(--muted);font-weight:500}
+.foot{color:var(--muted);font-size:11px;margin-top:8px}
+</style></head><body>
+<h1>GitHub API Quality Monitor <span class="pill">● HEALTHY</span></h1>
+<div class="sub">Availability, latency and performance of the GitHub REST API, observed from scheduled CI runs · Oct 21 – Oct 28, 2026 · 26 checks</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="l">Success rate</div><div class="v" style="color:#3fb950">100.0%</div><div class="f">26 ok · 0 failed</div></div>
+  <div class="kpi"><div class="l">Median latency</div><div class="v">214 ms</div><div class="f">avg 217 ms</div></div>
+  <div class="kpi"><div class="l">p95 / p99</div><div class="v">309<span style="font-size:16px;color:var(--muted)"> / 312 ms</span></div><div class="f">0 over 500 ms</div></div>
+  <div class="kpi"><div class="l">Perf pass rate</div><div class="v" style="color:#3fb950">100.0%</div><div class="f">≤ 500 ms threshold</div></div>
+</div>
+
+<div class="card"><h2>Average latency over time</h2>
+  <canvas id="line" height="90"></canvas>
+  <div class="foot">Each point = mean latency per hour.</div>
+</div>
+
+<div class="grid2">
+  <div class="card"><h2>Latency distribution</h2><canvas id="hist" height="150"></canvas></div>
+  <div class="card"><h2>Failures by type</h2>
+    <table><tr><th>Reason</th><th style="text-align:right">Count</th></tr><tr><td colspan="2" style="color:var(--muted)">No failures recorded</td></tr></table>
+  </div>
+</div>
+
+<div class="card"><h2>Recent runs</h2>
+  <table><tr><th>Time (UTC)</th><th>Status</th><th>Result</th><th style="text-align:right">Latency</th></tr><tr><td>10-28 12:11</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">157</td></tr><tr><td>10-28 04:10</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">228</td></tr><tr><td>10-27 21:51</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">309</td></tr><tr><td>10-27 17:30</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">269</td></tr><tr><td>10-27 11:39</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">132</td></tr><tr><td>10-27 03:51</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">260</td></tr><tr><td>10-26 22:20</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">166</td></tr><tr><td>10-26 12:19</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">185</td></tr><tr><td>10-26 03:23</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">299</td></tr><tr><td>10-25 20:25</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">283</td></tr><tr><td>10-25 15:37</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">252</td></tr><tr><td>10-25 10:48</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">140</td></tr></table>
+</div>
+
+<div class="foot">Note: measurements reflect what scheduled GitHub Actions runs observed from one environment — not a guarantee of how every user or region experiences the API.</div>
+
+<script>
+const g=(id)=>document.getElementById(id).getContext('2d');
+new Chart(g('line'),{type:'line',data:{labels:["21 23", "", "22 11", "", "22 21", "", "23 11", "", "23 21", "", "24 10", "", "24 20", "", "25 10", "", "25 20", "", "26 12", "", "27 03", "", "27 17", "", "28 04", ""],
+  datasets:[{data:[243.0, 190.7, 210.6, 34.1, 197.3, 208.5, 309.4, 288.3, 313.0, 168.8, 201.1, 224.5, 147.2, 216.5, 139.5, 251.6, 282.6, 299.3, 185.4, 166.4, 260.4, 131.8, 268.9, 309.0, 228.4, 156.8],borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',
+    fill:true,tension:.3,pointRadius:0,borderWidth:2}]},
+  options:{plugins:{legend:{display:false}},scales:{
+    x:{grid:{color:'#30363d'},ticks:{color:'#8b949e',maxRotation:0,autoSkip:true}},
+    y:{grid:{color:'#30363d'},ticks:{color:'#8b949e'},title:{display:true,text:'ms',color:'#8b949e'}}}}});
+// simple histogram
+const vals=[243.0, 190.7, 210.6, 34.1, 197.3, 208.5, 309.4, 288.3, 313.0, 168.8, 201.1, 224.5, 147.2, 216.5, 139.5, 251.6, 282.6, 299.3, 185.4, 166.4, 260.4, 131.8, 268.9, 309.0, 228.4, 156.8];const bins=24;const mn=Math.min(...vals),mx=Math.max(...vals);
+const w=(mx-mn)/bins||1;const counts=new Array(bins).fill(0);
+vals.forEach(v=>{let i=Math.min(bins-1,Math.floor((v-mn)/w));counts[i]++;});
+const blabels=counts.map((_,i)=>Math.round(mn+i*w));
+new Chart(g('hist'),{type:'bar',data:{labels:blabels,
+  datasets:[{data:counts,backgroundColor:'#58a6ff'}]},
+  options:{plugins:{legend:{display:false}},scales:{
+    x:{grid:{display:false},ticks:{color:'#8b949e',maxTicksLimit:8},title:{display:true,text:'ms',color:'#8b949e'}},
+    y:{grid:{color:'#30363d'},ticks:{color:'#8b949e'}}}}});
+</script>
+</body></html>
