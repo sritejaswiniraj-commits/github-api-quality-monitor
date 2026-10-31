@@ -1,0 +1,12 @@
+# Dark, deliberate theme — the single biggest visual upgrade.
+# Drop this file in your repo's .streamlit/ folder.
+[theme]
+base = "dark"
+primaryColor = "#58a6ff"              # GitHub-blue accent
+backgroundColor = "#0d1117"           # deep slate (matches GitHub dark)
+secondaryBackgroundColor = "#161b22"  # card surfaces
+textColor = "#e6edf3"
+font = "sans serif"
+
+[server]
+headless = true

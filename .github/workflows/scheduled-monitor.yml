@@ -2,7 +2,7 @@ name: Scheduled API Monitoring
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -29,8 +29,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run API monitor
-        run: python monitor.py
+      - name: Run API monitor (batch of time-distributed samples)
+        run: python monitor.py --batch 18 --interval 120
 
       - name: Commit updated history
         run: |

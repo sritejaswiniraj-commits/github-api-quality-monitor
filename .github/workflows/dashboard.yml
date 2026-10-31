@@ -1,7 +1,7 @@
 name: Build & Publish Dashboard
 on:
   workflow_run:
-    workflows: ["Scheduled Monitor"]   # rename to match your monitor workflow's name:
+    workflows: ["Scheduled API Monitoring"]
     types: [completed]
   workflow_dispatch: {}
 permissions:

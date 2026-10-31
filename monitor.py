@@ -119,14 +119,53 @@ def save_result(result):
         file.write(json.dumps(record) + "\n")
 
 
-if __name__ == "__main__":
+def run_once():
+    """Run a single check, save it, and return the result."""
     result = check_github_api()
     save_result(result)
+    return result
 
-    for key, value in result.items():
-        print(f"{key}: {value}")
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="GitHub API quality monitor")
+    parser.add_argument(
+        "--batch",
+        type=int,
+        default=1,
+        help="Number of samples to collect in this run (default: 1).",
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=120,
+        help="Seconds to wait between samples in batch mode (default: 120).",
+    )
+    args = parser.parse_args()
+
+    samples = max(1, args.batch)
+    last_result = None
+
+    for i in range(samples):
+        last_result = run_once()
+        state = "OK" if last_result["success"] else "FAIL"
+        print(
+            f"[{i + 1}/{samples}] {state} "
+            f"status={last_result['status_code']} "
+            f"{last_result['response_time_ms']}ms "
+            f"{last_result['error'] or ''}"
+        )
+        # Space samples apart so they are genuinely time-distributed,
+        # but don't sleep after the final one.
+        if i < samples - 1:
+            time.sleep(max(0, args.interval))
 
     print("result_saved_to: results/history.jsonl")
 
-    if not result["success"] or result["performance_passed"] is False:
-        raise SystemExit(1)
+    # In batch mode we never fail the workflow on a single bad sample —
+    # a real API blip is data, not a build failure. Single-run keeps the
+    # original strict behaviour for CI/testing.
+    if samples == 1 and last_result is not None:
+        if not last_result["success"] or last_result["performance_passed"] is False:
+            raise SystemExit(1)
