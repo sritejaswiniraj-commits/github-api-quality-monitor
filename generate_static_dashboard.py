@@ -65,6 +65,7 @@ def main():
     p50, p95, p99 = pct(lats, 50), pct(lats, 95), pct(lats, 99)
     avg = stats.mean(lats) if lats else 0
     over = sum(v > THRESHOLD for v in lats)
+    http403 = sum(1 for r in rows if r.get("status_code") == 403 or "403" in str(r.get("error", "")))
 
     hourly = defaultdict(list)
     for r in rows:
@@ -107,55 +108,56 @@ def main():
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{{
-  --bg:#f4f5fb; --surface:#ffffff; --ink:#1a1c2e; --muted:#6b7190; --line:#eceef5;
-  --violet:#7c5cff; --violet2:#a78bfa; --blue:#4f80ff; --teal:#2dd4bf;
-  --good:#16a34a; --bad:#dc2626; --amber:#d97706;
-  --grad:linear-gradient(135deg,#7c5cff 0%,#4f80ff 100%);
+  --bg:#f7f8fc;--surface:#fff;--ink:#171a2b;--muted:#737b96;--line:#e8ebf3;
+  --violet:#6d5dfc;--violet-soft:#f0edff;--blue:#4f7cff;
+  --good:#159957;--good-soft:#e8f7ef;--bad:#d64545;--bad-soft:#fff0f0;
+  --amber:#b7791f;--amber-soft:#fff6e5;
+  --grad:linear-gradient(135deg,#6d5dfc 0%,#4f7cff 100%);
 }}
 *{{box-sizing:border-box}}
-body{{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,sans-serif;font-size:14px}}
+html{{scroll-behavior:smooth}}
+body{{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5}}
 a{{color:inherit;text-decoration:none}}
 .layout{{display:flex;min-height:100vh}}
-.side{{width:232px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
-  padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}}
-.brand{{display:flex;align-items:center;gap:10px;padding:0 8px 24px;font-weight:800;font-size:15px}}
-.brand .logo{{width:30px;height:30px;border-radius:8px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:15px}}
-.nav a{{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--muted);
-  font-weight:500;margin-bottom:3px;transition:.15s}}
-.nav a:hover{{background:var(--bg);color:var(--ink)}}
-.nav a.active{{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(124,92,255,.3)}}
+.side{{width:218px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}}
+.brand{{display:flex;align-items:center;gap:10px;padding:0 10px 28px;font-weight:800;font-size:15px;letter-spacing:-.02em}}
+.brand .logo{{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 5px 12px rgba(109,93,252,.2)}}
+.nav a{{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;color:var(--muted);font-weight:600;margin-bottom:5px;transition:background .18s ease,color .18s ease}}
+.nav a:hover{{background:#f5f6fb;color:var(--ink)}}
+.nav a.active{{background:var(--violet-soft);color:var(--violet);box-shadow:inset 3px 0 0 var(--violet)}}
 .nav .ic{{width:18px;text-align:center;font-size:15px}}
-.side .foot{{margin-top:auto;padding:14px 12px;border-radius:12px;background:var(--bg);font-size:12px;color:var(--muted)}}
-.side .foot a{{color:var(--violet);font-weight:600}}
-.main{{flex:1;padding:28px 34px;max-width:1180px}}
-.head h1{{font-size:24px;margin:0;font-weight:800;letter-spacing:-.02em}}
-.head p{{color:var(--muted);margin:5px 0 0}}
-.head .hl{{color:var(--good);font-weight:600}}
-.pill{{display:inline-block;padding:5px 13px;border-radius:999px;font-size:12px;font-weight:700;
-  background:rgba(22,163,74,.12);color:var(--good);border:1px solid rgba(22,163,74,.25);margin-left:10px;vertical-align:middle}}
-.topbar{{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;flex-wrap:wrap;gap:12px}}
-.kpis{{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-bottom:22px}}
-.kpi{{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px;
-  box-shadow:0 2px 10px rgba(26,28,46,.04)}}
-.kpi .l{{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}}
-.kpi .v{{font-size:32px;font-weight:800;margin-top:10px;letter-spacing:-.02em}}
-.kpi .v small{{font-size:17px;color:var(--muted);font-weight:600}}
-.kpi .f{{color:var(--muted);font-size:12.5px;margin-top:8px}}
-.card{{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;
-  margin-bottom:22px;box-shadow:0 2px 10px rgba(26,28,46,.04)}}
-.card h2{{font-size:15px;margin:0 0 4px;font-weight:700}}
-.card .cap{{color:var(--muted);font-size:12.5px;margin:0 0 18px}}
-.grid2{{display:grid;grid-template-columns:1.4fr 1fr;gap:22px}}
-@media(max-width:860px){{.grid2{{grid-template-columns:1fr}} .side{{display:none}}}}
-table{{width:100%;border-collapse:collapse;font-size:13px}}
-td,th{{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}}
-th{{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}}
-tr:last-child td{{border-bottom:none}}
-.dot{{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle}}
-.note{{color:var(--muted);font-size:11.5px;margin-top:6px;line-height:1.5}}
-.insight{{background:linear-gradient(135deg,rgba(124,92,255,.07),rgba(79,128,255,.07));
-  border:1px solid rgba(124,92,255,.18);border-radius:14px;padding:14px 18px;margin-bottom:22px;font-size:13.5px}}
+.side .foot{{margin-top:auto;padding:14px;border-radius:12px;background:#f7f8fc;border:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6}}
+.side .foot a{{color:var(--violet);font-weight:700}}
+.main{{flex:1;padding:30px 36px;max-width:1600px;min-width:0}}
+.head h1{{font-size:27px;margin:0;font-weight:800;letter-spacing:-.045em}}
+.head p{{color:var(--muted);margin:7px 0 0;font-size:13px}}
+.head .hl{{color:var(--good);font-weight:700}}
+.pill{{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.035em;background:var(--good-soft);color:var(--good);border:1px solid #c8ead8;margin-left:10px;vertical-align:middle}}
+.topbar{{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px}}
+.kpis{{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:20px}}
+.kpi{{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:19px 20px;box-shadow:0 3px 12px rgba(24,32,56,.025);transition:transform .18s ease,box-shadow .18s ease}}
+.kpi:hover{{transform:translateY(-2px);box-shadow:0 8px 22px rgba(24,32,56,.06)}}
+.kpi .l{{color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.075em}}
+.kpi .v{{font-size:31px;font-weight:800;margin-top:8px;letter-spacing:-.045em;line-height:1.2}}
+.kpi .v small{{font-size:15px;color:var(--muted);font-weight:700;letter-spacing:-.02em}}
+.kpi .f{{color:var(--muted);font-size:12px;margin-top:8px}}
+.card{{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:20px;box-shadow:0 3px 12px rgba(24,32,56,.025)}}
+.card h2{{font-size:15px;margin:0 0 4px;font-weight:750;letter-spacing:-.02em}}
+.card .cap{{color:var(--muted);font-size:12px;margin:0 0 18px}}
+.grid2{{display:grid;grid-template-columns:1.35fr 1fr;gap:20px}}
+.insight{{background:linear-gradient(110deg,#f1efff 0%,#f0f5ff 100%);border:1px solid #ded9ff;border-radius:13px;padding:14px 17px;margin-bottom:20px;font-size:13px;color:#424663;line-height:1.6}}
 .insight b{{color:var(--violet)}}
+table{{width:100%;border-collapse:collapse;font-size:12.5px}}
+td,th{{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left}}
+th{{color:var(--muted);font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em}}
+tr:last-child td{{border-bottom:none}}
+tbody tr:hover{{background:#fafbfe}}
+.dot{{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle}}
+.note{{color:var(--muted);font-size:11px;margin-top:8px;line-height:1.6}}
+canvas{{max-width:100%}}
+@media(max-width:1100px){{.main{{padding:25px 24px}}.kpis{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
+@media(max-width:860px){{.grid2{{grid-template-columns:1fr}}.side{{display:none}}.main{{padding:22px 16px}}.head h1{{font-size:23px}}}}
+@media(max-width:520px){{.kpis{{grid-template-columns:1fr 1fr;gap:10px}}.kpi{{padding:15px}}.kpi .v{{font-size:25px}}.card{{padding:17px}}.pill{{margin-left:0;margin-top:8px}}}}
 </style></head><body>
 <div class="layout">
   <aside class="side">
@@ -184,7 +186,7 @@ tr:last-child td{{border-bottom:none}}
       <div class="kpi"><div class="l">Range</div><div class="v">{min(lats):.0f}<small> – {max(lats):.0f} ms</small></div><div class="f">fastest to slowest observed</div></div>
     </div>
     <div class="insight">
-      <b>What the data shows:</b> latency stayed tight (p99 {p99:.0f} ms, nothing over {THRESHOLD} ms). The only failures were {total-ok} HTTP 403s clustered in a short window — fast rejections, consistent with a rate-limit window rather than an outage.
+      <b>What the data shows:</b> latency remained within the {THRESHOLD} ms threshold (p99 {p99:.0f} ms). {http403} failed checks returned HTTP 403 responses. This pattern may be consistent with rate limiting; response headers would be needed to confirm the cause.
     </div>
     <div class="card" id="latency">
       <h2>Latency over time</h2>
@@ -215,9 +217,9 @@ tr:last-child td{{border-bottom:none}}
 const grad=(ctx,c1,c2)=>{{const g=ctx.createLinearGradient(0,0,0,240);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;}};
 const lc=document.getElementById('line').getContext('2d');
 new Chart(lc,{{type:'line',data:{{labels:{labels},datasets:[{{data:{data},
-  borderColor:'#7c5cff',borderWidth:2.5,fill:true,tension:.4,pointRadius:0,
-  backgroundColor:grad(lc,'rgba(124,92,255,.22)','rgba(124,92,255,0)')}}]}},
-  options:{{plugins:{{legend:{{display:false}}}},scales:{{
+  borderColor:'#6d5dfc',borderWidth:2.5,fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,
+  backgroundColor:grad(lc,'rgba(109,93,252,.18)','rgba(109,93,252,0)')}}]}},
+  options:{{plugins:{{legend:{{display:false}},tooltip:{{backgroundColor:'#171a2b',padding:10,displayColors:false}}}},interaction:{{intersect:false,mode:'index'}},scales:{{
     x:{{grid:{{display:false}},ticks:{{color:'#9499b7',maxRotation:0,autoSkip:true}}}},
     y:{{grid:{{color:'#eef0f7'}},ticks:{{color:'#9499b7'}},title:{{display:true,text:'ms',color:'#9499b7'}}}}}}}}}});
 const vals={hist_vals};const bins=22;const mn=Math.min(...vals),mx=Math.max(...vals);const w=(mx-mn)/bins||1;
