@@ -2,77 +2,135 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GitHub API Quality Monitor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--fg:#e6edf3;--muted:#8b949e;
-  --accent:#58a6ff;--good:#3fb950;--warn:#d29922;--bad:#f85149}
+:root{
+  --bg:#f4f5fb; --surface:#ffffff; --ink:#1a1c2e; --muted:#6b7190; --line:#eceef5;
+  --violet:#7c5cff; --violet2:#a78bfa; --blue:#4f80ff; --teal:#2dd4bf;
+  --good:#16a34a; --bad:#dc2626; --amber:#d97706;
+  --grad:linear-gradient(135deg,#7c5cff 0%,#4f80ff 100%);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  padding:28px 20px;max-width:1040px;margin:0 auto}
-h1{font-size:28px;margin:0;letter-spacing:-.01em}
-.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;
-  font-weight:700;margin-left:10px;vertical-align:middle;
-  background:#3fb95022;color:#3fb950;border:1px solid #3fb95055}
-.sub{color:var(--muted);font-size:14px;margin:6px 0 26px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:26px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
-.kpi .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
-.kpi .v{font-size:30px;font-weight:700;margin-top:8px;line-height:1}
-.kpi .f{color:var(--muted);font-size:12px;margin-top:8px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
-.card h2{font-size:15px;margin:0 0 16px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,sans-serif;font-size:14px}
+a{color:inherit;text-decoration:none}
+.layout{display:flex;min-height:100vh}
+.side{width:232px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
+  padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px;font-weight:800;font-size:15px}
+.brand .logo{width:30px;height:30px;border-radius:8px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:15px}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--muted);
+  font-weight:500;margin-bottom:3px;transition:.15s}
+.nav a:hover{background:var(--bg);color:var(--ink)}
+.nav a.active{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(124,92,255,.3)}
+.nav .ic{width:18px;text-align:center;font-size:15px}
+.side .foot{margin-top:auto;padding:14px 12px;border-radius:12px;background:var(--bg);font-size:12px;color:var(--muted)}
+.side .foot a{color:var(--violet);font-weight:600}
+.main{flex:1;padding:28px 34px;max-width:1180px}
+.head h1{font-size:24px;margin:0;font-weight:800;letter-spacing:-.02em}
+.head p{color:var(--muted);margin:5px 0 0}
+.head .hl{color:var(--good);font-weight:600}
+.pill{display:inline-block;padding:5px 13px;border-radius:999px;font-size:12px;font-weight:700;
+  background:rgba(22,163,74,.12);color:var(--good);border:1px solid rgba(22,163,74,.25);margin-left:10px;vertical-align:middle}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;flex-wrap:wrap;gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px;
+  box-shadow:0 2px 10px rgba(26,28,46,.04)}
+.kpi .l{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:32px;font-weight:800;margin-top:10px;letter-spacing:-.02em}
+.kpi .v small{font-size:17px;color:var(--muted);font-weight:600}
+.kpi .f{color:var(--muted);font-size:12.5px;margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;
+  margin-bottom:22px;box-shadow:0 2px 10px rgba(26,28,46,.04)}
+.card h2{font-size:15px;margin:0 0 4px;font-weight:700}
+.card .cap{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:22px}
+@media(max-width:860px){.grid2{grid-template-columns:1fr} .side{display:none}}
 table{width:100%;border-collapse:collapse;font-size:13px}
-td,th{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left}
-th{color:var(--muted);font-weight:500}
-.foot{color:var(--muted);font-size:11px;margin-top:8px}
+td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.note{color:var(--muted);font-size:11.5px;margin-top:6px;line-height:1.5}
+.insight{background:linear-gradient(135deg,rgba(124,92,255,.07),rgba(79,128,255,.07));
+  border:1px solid rgba(124,92,255,.18);border-radius:14px;padding:14px 18px;margin-bottom:22px;font-size:13.5px}
+.insight b{color:var(--violet)}
 </style></head><body>
-<h1>GitHub API Quality Monitor <span class="pill">● HEALTHY</span></h1>
-<div class="sub">Availability, latency and performance of the GitHub REST API, observed from scheduled CI runs · Oct 21 – Oct 28, 2026 · 26 checks</div>
-
-<div class="kpis">
-  <div class="kpi"><div class="l">Success rate</div><div class="v" style="color:#3fb950">100.0%</div><div class="f">26 ok · 0 failed</div></div>
-  <div class="kpi"><div class="l">Median latency</div><div class="v">214 ms</div><div class="f">avg 217 ms</div></div>
-  <div class="kpi"><div class="l">p95 / p99</div><div class="v">309<span style="font-size:16px;color:var(--muted)"> / 312 ms</span></div><div class="f">0 over 500 ms</div></div>
-  <div class="kpi"><div class="l">Perf pass rate</div><div class="v" style="color:#3fb950">100.0%</div><div class="f">≤ 500 ms threshold</div></div>
+<div class="layout">
+  <aside class="side">
+    <div class="brand"><span class="logo">◈</span> API Monitor</div>
+    <nav class="nav">
+      <a href="#overview" class="active"><span class="ic">▦</span> Overview</a>
+      <a href="#latency"><span class="ic">◠</span> Latency</a>
+      <a href="#failures"><span class="ic">⚑</span> Failures</a>
+      <a href="#runs"><span class="ic">≡</span> Recent runs</a>
+      <a href="https://github.com/sritejaswiniraj-commits/github-api-quality-monitor" target="_blank"><span class="ic">◐</span> Source code</a>
+    </nav>
+    <div class="foot">Monitoring the GitHub REST API on a schedule via CI.<br><br>
+      <a href="https://github.com/sritejaswiniraj-commits/github-api-quality-monitor" target="_blank">View on GitHub →</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar" id="overview">
+      <div class="head">
+        <h1>Systems Overview <span class="pill">● OPERATIONAL</span></h1>
+        <p>GitHub REST API — <span class="hl">98.2% success</span> across 273 checks · Oct 21 – Nov 03, 2026 (13d) · observed from scheduled CI runs.</p>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Success rate</div><div class="v" style="color:var(--good)">98.2%</div><div class="f">268 ok · 5 failed</div></div>
+      <div class="kpi"><div class="l">Median latency</div><div class="v">232<small> ms</small></div><div class="f">average 230 ms</div></div>
+      <div class="kpi"><div class="l">p95 / p99</div><div class="v">314<small> / 339 ms</small></div><div class="f">0 over 500 ms threshold</div></div>
+      <div class="kpi"><div class="l">Range</div><div class="v">34<small> – 348 ms</small></div><div class="f">fastest to slowest observed</div></div>
+    </div>
+    <div class="insight">
+      <b>What the data shows:</b> latency stayed tight (p99 339 ms, nothing over 500 ms). The only failures were 5 HTTP 403s clustered in a short window — fast rejections, consistent with a rate-limit window rather than an outage.
+    </div>
+    <div class="card" id="latency">
+      <h2>Latency over time</h2>
+      <p class="cap">Average response time per hour across the monitoring window.</p>
+      <canvas id="line" height="78"></canvas>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Latency distribution</h2>
+        <p class="cap">How response times clustered across all 273 checks.</p>
+        <canvas id="hist" height="150"></canvas>
+      </div>
+      <div class="card" id="failures">
+        <h2>Failures by type</h2>
+        <p class="cap">Every non-success response, grouped.</p>
+        <table><tr><th>Reason</th><th style="text-align:right">Count</th></tr><tr><td>Unexpected HTTP status: 403</td><td style="text-align:right;font-weight:600">5</td></tr></table>
+      </div>
+    </div>
+    <div class="card" id="runs">
+      <h2>Recent runs</h2>
+      <p class="cap">The latest checks, newest first.</p>
+      <table><tr><th>Time (UTC)</th><th>Status</th><th>Result</th><th style="text-align:right">Latency</th></tr><tr><td>11-03 04:53</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">317 ms</td></tr><tr><td>11-03 04:51</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">277 ms</td></tr><tr><td>11-03 04:49</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">304 ms</td></tr><tr><td>11-03 04:47</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">294 ms</td></tr><tr><td>11-03 04:45</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">286 ms</td></tr><tr><td>11-03 04:43</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">289 ms</td></tr><tr><td>11-03 04:41</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">315 ms</td></tr><tr><td>11-03 04:39</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">309 ms</td></tr><tr><td>11-03 04:37</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">306 ms</td></tr><tr><td>11-03 04:35</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">297 ms</td></tr><tr><td>11-03 04:33</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">306 ms</td></tr><tr><td>11-03 04:31</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">289 ms</td></tr><tr><td>11-03 04:29</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">289 ms</td></tr><tr><td>11-03 04:27</td><td>200</td><td><span class="dot" style="background:#16a34a"></span>Success</td><td style="text-align:right">304 ms</td></tr></table>
+    </div>
+    <p class="note">Note: measurements reflect what scheduled GitHub Actions runs observed from one environment — not a guarantee of how every user or region experiences the API. Built with Python · data committed to the repo on every run.</p>
+  </main>
 </div>
-
-<div class="card"><h2>Average latency over time</h2>
-  <canvas id="line" height="90"></canvas>
-  <div class="foot">Each point = mean latency per hour.</div>
-</div>
-
-<div class="grid2">
-  <div class="card"><h2>Latency distribution</h2><canvas id="hist" height="150"></canvas></div>
-  <div class="card"><h2>Failures by type</h2>
-    <table><tr><th>Reason</th><th style="text-align:right">Count</th></tr><tr><td colspan="2" style="color:var(--muted)">No failures recorded</td></tr></table>
-  </div>
-</div>
-
-<div class="card"><h2>Recent runs</h2>
-  <table><tr><th>Time (UTC)</th><th>Status</th><th>Result</th><th style="text-align:right">Latency</th></tr><tr><td>10-28 12:11</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">157</td></tr><tr><td>10-28 04:10</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">228</td></tr><tr><td>10-27 21:51</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">309</td></tr><tr><td>10-27 17:30</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">269</td></tr><tr><td>10-27 11:39</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">132</td></tr><tr><td>10-27 03:51</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">260</td></tr><tr><td>10-26 22:20</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">166</td></tr><tr><td>10-26 12:19</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">185</td></tr><tr><td>10-26 03:23</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">299</td></tr><tr><td>10-25 20:25</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">283</td></tr><tr><td>10-25 15:37</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">252</td></tr><tr><td>10-25 10:48</td><td>200</td><td style="color:#3fb950">✓</td><td style="text-align:right">140</td></tr></table>
-</div>
-
-<div class="foot">Note: measurements reflect what scheduled GitHub Actions runs observed from one environment — not a guarantee of how every user or region experiences the API.</div>
-
 <script>
-const g=(id)=>document.getElementById(id).getContext('2d');
-new Chart(g('line'),{type:'line',data:{labels:["21 23", "", "22 11", "", "22 21", "", "23 11", "", "23 21", "", "24 10", "", "24 20", "", "25 10", "", "25 20", "", "26 12", "", "27 03", "", "27 17", "", "28 04", ""],
-  datasets:[{data:[243.0, 190.7, 210.6, 34.1, 197.3, 208.5, 309.4, 288.3, 313.0, 168.8, 201.1, 224.5, 147.2, 216.5, 139.5, 251.6, 282.6, 299.3, 185.4, 166.4, 260.4, 131.8, 268.9, 309.0, 228.4, 156.8],borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',
-    fill:true,tension:.3,pointRadius:0,borderWidth:2}]},
+const grad=(ctx,c1,c2)=>{const g=ctx.createLinearGradient(0,0,0,240);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
+const lc=document.getElementById('line').getContext('2d');
+new Chart(lc,{type:'line',data:{labels:["23:00", "", "", "", "21:00", "", "", "", "21:00", "", "", "", "20:00", "", "", "", "20:00", "", "", "", "03:00", "", "", "", "04:00", "", "", "", "07:00", "", "", "", "04:00", "", "", "", "01:00", "", "", "", "17:00", "", "", "", "02:00", "", "", "", "16:00", "", "", "", "00:00", "", "", "", "17:00", "", "", ""],datasets:[{data:[243.0, 190.7, 210.6, 34.1, 197.3, 208.5, 309.4, 288.3, 313.0, 168.8, 201.1, 224.5, 147.2, 216.5, 139.5, 251.6, 282.6, 299.3, 185.4, 166.4, 260.4, 131.8, 268.9, 309.0, 228.4, 156.8, 257.0, 203.6, 215.3, 340.3, 218.9, 247.9, 151.4, 310.2, 188.0, 285.4, 161.8, 286.6, 204.1, 298.1, 294.2, 156.3, 225.0, 218.4, 296.1, 295.0, 147.9, 152.2, 224.3, 224.8, 210.5, 236.5, 236.7, 201.6, 132.4, 232.8, 248.6, 311.1, 311.2, 299.1],
+  borderColor:'#7c5cff',borderWidth:2.5,fill:true,tension:.4,pointRadius:0,
+  backgroundColor:grad(lc,'rgba(124,92,255,.22)','rgba(124,92,255,0)')}]},
   options:{plugins:{legend:{display:false}},scales:{
-    x:{grid:{color:'#30363d'},ticks:{color:'#8b949e',maxRotation:0,autoSkip:true}},
-    y:{grid:{color:'#30363d'},ticks:{color:'#8b949e'},title:{display:true,text:'ms',color:'#8b949e'}}}}});
-// simple histogram
-const vals=[243.0, 190.7, 210.6, 34.1, 197.3, 208.5, 309.4, 288.3, 313.0, 168.8, 201.1, 224.5, 147.2, 216.5, 139.5, 251.6, 282.6, 299.3, 185.4, 166.4, 260.4, 131.8, 268.9, 309.0, 228.4, 156.8];const bins=24;const mn=Math.min(...vals),mx=Math.max(...vals);
-const w=(mx-mn)/bins||1;const counts=new Array(bins).fill(0);
-vals.forEach(v=>{let i=Math.min(bins-1,Math.floor((v-mn)/w));counts[i]++;});
-const blabels=counts.map((_,i)=>Math.round(mn+i*w));
-new Chart(g('hist'),{type:'bar',data:{labels:blabels,
-  datasets:[{data:counts,backgroundColor:'#58a6ff'}]},
+    x:{grid:{display:false},ticks:{color:'#9499b7',maxRotation:0,autoSkip:true}},
+    y:{grid:{color:'#eef0f7'},ticks:{color:'#9499b7'},title:{display:true,text:'ms',color:'#9499b7'}}}}});
+const vals=[243.0, 190.7, 210.6, 34.1, 197.3, 208.5, 309.4, 288.3, 313.0, 168.8, 201.1, 224.5, 147.2, 216.5, 139.5, 251.6, 282.6, 299.3, 185.4, 166.4, 260.4, 131.8, 268.9, 309.0, 228.4, 156.8, 256.4, 257.6, 203.6, 215.3, 340.3, 218.9, 247.9, 151.4, 310.2, 188.0, 285.4, 161.8, 286.6, 158.3, 178.3, 183.6, 166.1, 214.3, 235.2, 253.0, 215.5, 243.0, 213.1, 173.7, 242.8, 165.5, 232.0, 167.9, 177.9, 190.5, 263.5, 277.3, 284.3, 306.5, 331.1, 304.9, 318.3, 286.9, 343.0, 304.4, 288.0, 292.6, 278.1, 299.7, 293.2, 285.8, 289.1, 284.9, 294.2, 158.1, 162.1, 155.7, 160.3, 148.7, 139.1, 204.3, 184.4, 148.3, 160.4, 141.5, 142.2, 153.3, 149.7, 140.9, 151.5, 147.6, 166.1, 216.7, 235.7, 213.9, 226.7, 231.9, 220.3, 245.9, 224.0, 204.2, 215.2, 232.7, 208.1, 246.0, 197.1, 214.9, 218.5, 219.9, 193.1, 317.8, 295.7, 293.6, 277.1, 303.7, 301.8, 277.2, 303.8, 300.8, 293.4, 300.1, 292.3, 299.4, 283.0, 299.2, 302.5, 283.9, 289.1, 158.7, 136.5, 153.9, 142.6, 149.6, 140.9, 187.5, 137.4, 146.9, 148.2, 188.5, 150.7, 150.5, 144.2, 154.9, 154.0, 139.8, 138.1, 216.0, 236.0, 239.7, 234.2, 195.8, 232.7, 231.2, 219.1, 202.1, 222.1, 221.4, 244.9, 266.7, 193.1, 209.6, 231.6, 215.5, 227.3, 228.1, 193.3, 210.4, 209.9, 221.1, 236.7, 226.8, 222.3, 235.0, 226.5, 237.0, 244.9, 233.3, 275.2, 238.2, 239.1, 240.0, 234.7, 246.8, 266.7, 265.2, 288.7, 207.9, 292.8, 208.1, 250.3, 270.2, 209.0, 269.7, 195.1, 204.4, 194.9, 190.7, 204.3, 283.4, 212.5, 174.4, 228.8, 161.3, 39.9, 184.4, 161.3, 172.8, 41.5, 63.1, 168.2, 37.6, 197.2, 169.6, 152.7, 151.5, 37.3, 217.2, 162.2, 214.7, 231.0, 221.2, 233.7, 233.0, 243.3, 237.9, 247.3, 223.9, 257.5, 239.9, 242.1, 240.7, 269.6, 248.6, 280.0, 251.7, 232.4, 307.9, 293.4, 290.8, 310.2, 348.1, 295.6, 328.2, 314.4, 338.0, 304.2, 314.2, 306.4, 313.1, 318.7, 309.2, 289.3, 304.5, 314.6, 280.8, 291.3, 315.8, 310.9, 304.3, 289.4, 289.0, 306.2, 296.6, 306.3, 308.6, 315.4, 289.5, 286.4, 293.9, 304.4, 277.1, 317.0];const bins=22;const mn=Math.min(...vals),mx=Math.max(...vals);const w=(mx-mn)/bins||1;
+const counts=new Array(bins).fill(0);vals.forEach(v=>{let i=Math.min(bins-1,Math.floor((v-mn)/w));counts[i]++;});
+const bl=counts.map((_,i)=>Math.round(mn+i*w));
+const hc=document.getElementById('hist').getContext('2d');
+new Chart(hc,{type:'bar',data:{labels:bl,datasets:[{data:counts,
+  backgroundColor:grad(hc,'#7c5cff','#4f80ff'),borderRadius:5,barPercentage:.95,categoryPercentage:.98}]},
   options:{plugins:{legend:{display:false}},scales:{
-    x:{grid:{display:false},ticks:{color:'#8b949e',maxTicksLimit:8},title:{display:true,text:'ms',color:'#8b949e'}},
-    y:{grid:{color:'#30363d'},ticks:{color:'#8b949e'}}}}});
+    x:{grid:{display:false},ticks:{color:'#9499b7',maxTicksLimit:8},title:{display:true,text:'ms',color:'#9499b7'}},
+    y:{grid:{color:'#eef0f7'},ticks:{color:'#9499b7'}}}}});
+const secs=['overview','latency','failures','runs'].map(id=>document.getElementById(id));
+const links=document.querySelectorAll('.nav a');
+addEventListener('scroll',()=>{let cur='overview';secs.forEach(s=>{if(s&&s.getBoundingClientRect().top<160)cur=s.id;});
+  links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));});
 </script>
 </body></html>
