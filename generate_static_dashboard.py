@@ -84,7 +84,10 @@ def main():
     state_t = "HEALTHY" if success_rate >= 99 else "OPERATIONAL" if success_rate >= 95 else "DEGRADED"
 
     step = max(1, len(series) // 14)
-    labels = json.dumps([h[-5:] if i % step == 0 else "" for i, (h, _) in enumerate(series)])
+    labels = json.dumps([
+        datetime.strptime(h, "%Y-%m-%d %H:00").strftime("%b %d %Hh") if i % step == 0 else ""
+        for i, (h, _) in enumerate(series)
+    ])
     data = json.dumps([round(v, 1) for _, v in series])
     hist_vals = json.dumps([round(v, 1) for v in lats])
     fail_rows = "".join(
